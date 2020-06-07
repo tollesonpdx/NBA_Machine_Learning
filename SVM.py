@@ -11,17 +11,19 @@ def loadData():
     """load the source data"""
     
     # load source data from the source files
-    gaussians = pd.read_csv(os.path.join(__location__,'./cluster_dataset.txt'), 
-                            engine='python', sep="  ", header=None,
-                            names=["x","y"])
-    
-    if (v):
-        print(f"gaussians shape:{gaussians.shape}\nmax:\n{gaussians.max()}\nmin:\n{gaussians.min()}")
-        print(gaussians)
-        emptyDF = pd.DataFrame()
-        plotStuff(gaussians, 'freshly_loaded_data', 'label', emptyDF, None, None) # plot the loaded data
+    playerData = pd.read_csv(os.path.join(__location__,'./SourceData/player_data.csv'))
+    players = pd.read_csv(os.path.join(__location__,'./SourceData/Players.csv'))
+    seasonsStats = pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats.csv'))
 
-    return gaussians
+    if (v):
+        print(f"playerData shape:{playerData.shape}")
+        print(f"players shape:{players.shape}")
+        print(f"seasonsStats shape:{seasonsStats.shape}")
+        print(playerData)
+        print(players)
+        print(seasonsStats)
+
+    return playerData, players, seasonsStats
 
 
 
@@ -29,6 +31,7 @@ if __name__ == "__main__":
     timeStart = time.time()
     v = 1 # flag for verbose printing
 
+    playerData, players, seasonsStats = loadData()
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
