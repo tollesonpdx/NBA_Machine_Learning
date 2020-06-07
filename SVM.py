@@ -19,9 +19,9 @@ def loadData():
         print(f"playerData shape:{playerData.shape}")
         print(f"players shape:{players.shape}")
         print(f"seasonsStats shape:{seasonsStats.shape}")
-        print(playerData)
-        print(players)
-        print(seasonsStats)
+        # print(playerData.head())
+        # print(players.head())
+        # print(seasonsStats.head())
 
     return playerData, players, seasonsStats
 
@@ -33,6 +33,17 @@ if __name__ == "__main__":
 
     playerData, players, seasonsStats = loadData()
 
+    playerGames={}
+    success_players=[]
+    print(seasonsStats['G'].head())
+    for player in seasonsStats['Player']:
+      if player not in playerGames.keys():
+        playerGames[player]=0
+        games=[seasonsStats.loc[seasonsStats['Player']==player, 'G']][0].values
+        playerGames[player]=sum(games)
+        if playerGames[player]>=174:
+          print(player, playerGames[player])
+          success_players.append(player)
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
     print(f'This program took {int(minutes)} minutes and {int(seconds)} seconds to run.')
