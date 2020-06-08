@@ -15,7 +15,13 @@ if __name__ == "__main__":
     seasonsStats, nbaNCAABplayers = loadData()
 
     seasStat_Group = (seasonsStats.groupby(['Player'])['Year'].count())
+    seasStat_Group.sort_values(ascending=False, inplace=True)
     print(f'season stats shape:{seasStat_Group.shape}')
+    print(seasStat_Group.head())
+    # print(seasonsStats.loc[seasonsStats['Player']=='Kevin Willis'])
 
-    ncaab_Group = nbaNCAABplayers.groupby(['pid','name'])['NBA_g_played'].count()
-    print(f'ncaab shape:{ncaab_Group.shape}')
+    if False:
+        ncaab_Group = nbaNCAABplayers.groupby(['name'])['NBA_g_played', 'NCAA_games'].count()
+        ncaab_Group.sort_values(by='NBA_g_played', ascending=False, inplace=True)
+        print(f'ncaab shape:{ncaab_Group.shape}')
+        print(ncaab_Group.head())
