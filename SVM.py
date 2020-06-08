@@ -1,8 +1,12 @@
 import os
+import sys
 import time
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
+from sklearn import svm
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.utils import shuffle
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -13,6 +17,8 @@ def loadData():
     seasonsStats = pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats.csv'), index_col=0)
     glossary = dict(pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats_Glossary.txt'),
                            sep='|', names=['abbv','description'], skip_blank_lines=True).values)
+    nbaNCAABplayers = pd.read_csv(os.path.join(__location__,'./SourceData/nba_ncaab_players.csv'))
+
 
     if (v):
         print(f"playerData shape:{playerData.shape}")
@@ -25,7 +31,7 @@ def loadData():
         print(glossary)
         # seasonsStats.rename(columns = glossary, inplace=True)
 
-    return playerData, players, seasonsStats, glossary
+    return playerData, players, seasonsStats, glossary, nbaNCAABplayers
 
 def idSuccessOld(seasonsStats, ng):
     playerGames={}
@@ -47,16 +53,25 @@ def idSuccessNew(seasonsStats, ng):
     if (v): print(successP)
     return successP
 
+def prepAndSplitData(source, split):
+    lenTraining = int(len(source) * split)
+    source = shuffle(source.drop(columns=['Pos','Tm']))
+    trainingData = source[:lenTraining]
+    testingData = source[lenTraining:]
+    return trainingData, testingData
+
 if __name__ == "__main__":
     timeStart = time.time()
+
+    ### hyperparameters ###
     v = 0 # flag for verbose printing
     ng = 174 # number of games played needed to be a "successful" player
-    playerData, players, seasonsStats, glossary = loadData()
-    if 1:
-        success_players = idSuccessNew(seasonsStats, ng)
-    else:
-        success_players = idSuccessOld(seasonsStats, ng)
+    split = .8 # proportion of training data to whole
     
+
+    playerData, players, seasonsStats, glossary, nbaNCAABplayers = loadData()
+    successfulPlayers = idSuccessNew(seasonsStats, ng)
+    trainData, testData = prepAndSplitData(seasonsStats, split)
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
