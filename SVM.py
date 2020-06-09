@@ -18,7 +18,7 @@ def loadData():
     glossary = dict(pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats_Glossary.txt'),
                            sep='|', names=['abbv','description'], skip_blank_lines=True).values)
     nbaNCAABplayers = pd.read_csv(os.path.join(__location__,'./SourceData/nba_ncaab_players.csv'))
-
+    tomsStuff = pd.read_csv(os.path.join(__location__,'./SourceData/toms_combined_data.csv'))
 
     if (v):
         print(f"playerData shape:{playerData.shape}")
@@ -31,7 +31,7 @@ def loadData():
         print(glossary)
         # seasonsStats.rename(columns = glossary, inplace=True)
 
-    return playerData, players, seasonsStats, glossary, nbaNCAABplayers
+    return playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff
 
 def idSuccessOld(seasonsStats, ng):
     playerGames={}
@@ -55,7 +55,16 @@ def idSuccessNew(seasonsStats, ng):
 
 def prepAndSplitData(source, split):
     lenTraining = int(len(source) * split)
-    source = shuffle(source.drop(columns=['Pos','Tm']))
+    
+    # this is for the NCAA data
+    # source = shuffle(source.drop(columns=['name','college','height','birth_date','position','url'])) 
+    
+    # this is for Tom's combined data
+    source = shuffle(source.drop(columns=['name','college'])) 
+    
+    denomanoms = source.abs().max()
+    source = source/denomanoms
+    print(source)
     trainingData = source[:lenTraining]
     testingData = source[lenTraining:]
     return trainingData, testingData
@@ -69,10 +78,10 @@ if __name__ == "__main__":
     split = .8 # proportion of training data to whole
     
 
-    playerData, players, seasonsStats, glossary, nbaNCAABplayers = loadData()
+    playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff = loadData()
     successfulPlayers = idSuccessNew(seasonsStats, ng)
-    trainData, testData = prepAndSplitData(seasonsStats, split)
+    trainData, testData = prepAndSplitData(tomsStuff, split)
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
-    print(f'This program took {int(minutes)} minutes and {int(seconds)} seconds to run.')
+    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run.')
