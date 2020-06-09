@@ -62,15 +62,29 @@ def prepAndSplitData(source, split, ng):
     # this is for Tom's combined data
     source.set_index(['player'], inplace=True)
     source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
-    source = shuffle(source.drop(columns=['name','college','nba_gms_plyed']))
+    source = source.drop(columns=['name','college','nba_gms_plyed'])
+    # source = source.fillna(source.mean()) # seems like this may not work
+    source.apply(lambda x: x.fillna(x.mean()), axis=0)
+    source = source.fillna(1)
 
     denomanoms = source.abs().max()
+    maxYear = denomanoms['draft_yr']
     source = source/denomanoms
-    if (v): print(source)
     
-    trainingData = source[:lenTraining]
-    testingData = source[lenTraining:]
-    return trainingData, testingData
+    trainingData = source[source['draft_yr'] <= split/maxYear]
+    trainingTargets = trainingData['success']
+    trainingData.drop(columns=['success'])
+    
+    testingData = source[source['draft_yr'] > split/maxYear]
+    testingTargets = testingData['success']
+    testingData.drop(columns=['success'])
+
+    if (1):
+        print(f'max values for source table: {denomanoms.shape}')
+        print(f'training data and targets: {trainingData.shape, trainingTargets.shape}')
+        print(f' testing data and targets: {testingData.shape, testingTargets.shape}')
+
+    return trainingData, trainingTargets, testingData, testingTargets
 
 if __name__ == "__main__":
     timeStart = time.time()
@@ -78,23 +92,24 @@ if __name__ == "__main__":
     ### hyperparameters ###
     v = 0 # flag for verbose printing
     ng = 240 # number of games played needed to be a "successful" player
-    split = .8 # proportion of training data to whole
+    split = 2009 # proportion of training data to whole
     
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff = loadData()
     successfulPlayers = idSuccessNew(seasonsStats, ng)
-    trainData, testData = prepAndSplitData(tomsStuff, split, ng)
-    print(trainData)
+    trainData, trainTarg, testData, testTarg = prepAndSplitData(tomsStuff, split, ng)
+    
+
     # SVM goes here
-    if False:
-        # print(__doc__)
+    if 0:
+        print(__doc__)
 
         range = 2
         xx, yy = np.meshgrid(np.linspace(-range, range, 500),
                             np.linspace(-range, range, 500))
         np.random.seed(0)
-        X = np.random.randn(300, 2)
-        Y = np.logical_xor(X[:, 0] > 0, X[:, 1] > 0)
+        X = trainData
+        Y = trainTarg
 
         # fit the model
         clf = svm.NuSVC(gamma='auto')
