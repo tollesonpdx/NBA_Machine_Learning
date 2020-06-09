@@ -53,18 +53,21 @@ def idSuccessNew(seasonsStats, ng):
     if (v): print(successP)
     return successP
 
-def prepAndSplitData(source, split):
+def prepAndSplitData(source, split, ng):
     lenTraining = int(len(source) * split)
     
     # this is for the NCAA data
     # source = shuffle(source.drop(columns=['name','college','height','birth_date','position','url'])) 
     
     # this is for Tom's combined data
-    source = shuffle(source.drop(columns=['name','college'])) 
-    
+    source.set_index(['player'], inplace=True)
+    source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
+    source = shuffle(source.drop(columns=['name','college','nba_gms_plyed']))
+
     denomanoms = source.abs().max()
     source = source/denomanoms
-    print(source)
+    if (v): print(source)
+    
     trainingData = source[:lenTraining]
     testingData = source[lenTraining:]
     return trainingData, testingData
@@ -74,13 +77,44 @@ if __name__ == "__main__":
 
     ### hyperparameters ###
     v = 0 # flag for verbose printing
-    ng = 174 # number of games played needed to be a "successful" player
+    ng = 240 # number of games played needed to be a "successful" player
     split = .8 # proportion of training data to whole
     
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff = loadData()
     successfulPlayers = idSuccessNew(seasonsStats, ng)
-    trainData, testData = prepAndSplitData(tomsStuff, split)
+    trainData, testData = prepAndSplitData(tomsStuff, split, ng)
+    print(trainData)
+    # SVM goes here
+    if False:
+        # print(__doc__)
+
+        range = 2
+        xx, yy = np.meshgrid(np.linspace(-range, range, 500),
+                            np.linspace(-range, range, 500))
+        np.random.seed(0)
+        X = np.random.randn(300, 2)
+        Y = np.logical_xor(X[:, 0] > 0, X[:, 1] > 0)
+
+        # fit the model
+        clf = svm.NuSVC(gamma='auto')
+        clf.fit(X, Y)
+
+        # plot the decision function for each datapoint on the grid
+        Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+        Z = Z.reshape(xx.shape)
+
+        plt.imshow(Z, interpolation='nearest',
+                extent=(xx.min(), xx.max(), yy.min(), yy.max()), aspect='auto',
+                origin='lower', cmap=plt.cm.PuOr_r)
+        contours = plt.contour(xx, yy, Z, levels=[0], linewidths=2,
+                            linestyles='dashed')
+        plt.scatter(X[:, 0], X[:, 1], s=30, c=Y, cmap=plt.cm.Paired,
+                    edgecolors='k')
+        plt.xticks(())
+        plt.yticks(())
+        plt.axis([-range, range, -range, range])
+        plt.show()
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
