@@ -65,14 +65,19 @@ def prepAndSplitData(source, split, ng):
     source = shuffle(source.drop(columns=['name','college','nba_gms_plyed']))
 
     denomanoms = source.abs().max()
+    if (v): print(denomanoms)
     maxYear = denomanoms['draft_yr']
     source = source/denomanoms
     
-    if (v): print(denomanoms)
-    
     trainingData = source[source['draft_yr'] <= split/maxYear]
+    trainingTargets = trainingData['success']
+    trainingData.drop(columns=['success'])
+    
     testingData = source[source['draft_yr'] > split/maxYear]
-    return trainingData, testingData
+    testingTargets = testingData['success']
+    testingData.drop(columns=['success'])
+
+    return trainingData, trainingTargets, testingData, testingTargets
 
 if __name__ == "__main__":
     timeStart = time.time()
@@ -85,8 +90,9 @@ if __name__ == "__main__":
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff = loadData()
     successfulPlayers = idSuccessNew(seasonsStats, ng)
-    trainData, testData = prepAndSplitData(tomsStuff, split, ng)
-    print(trainData)
+    trainData, trainTarg, testData, testTarg = prepAndSplitData(tomsStuff, split, ng)
+    print(trainData.shape, trainTarg.shape)
+
     # SVM goes here
     if False:
         # print(__doc__)
