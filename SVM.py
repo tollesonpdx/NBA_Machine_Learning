@@ -65,11 +65,13 @@ def prepAndSplitData(source, split, ng):
     source = shuffle(source.drop(columns=['name','college','nba_gms_plyed']))
 
     denomanoms = source.abs().max()
+    maxYear = denomanoms['draft_yr']
     source = source/denomanoms
-    if (v): print(source)
     
-    trainingData = source[:lenTraining]
-    testingData = source[lenTraining:]
+    if (v): print(denomanoms)
+    
+    trainingData = source[source['draft_yr'] <= split/maxYear]
+    testingData = source[source['draft_yr'] > split/maxYear]
     return trainingData, testingData
 
 if __name__ == "__main__":
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     ### hyperparameters ###
     v = 0 # flag for verbose printing
     ng = 240 # number of games played needed to be a "successful" player
-    split = .8 # proportion of training data to whole
+    split = 2009 # proportion of training data to whole
     
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff = loadData()
