@@ -64,6 +64,7 @@ def regression(trainData, testData):
     if y_test[i]==pred[i]:
       correct+=1
     confmat[int(pred[i])][int(y_test[i])]+=1
+    #TODO calculate accuracy and precision
 
   print(f'Percent correctly predicted by logistic regression model: {round(correct/len(y_test), 2)}%')
   # print('Coefficients: \n', lm.coef_)
@@ -103,7 +104,7 @@ def main():
 
   plt.xlabel('Trial')
   plt.ylabel('Percent of Correct Predictions', fontsize=14)
-  plt.title('Overal Predictive Percent: Regression', fontsize=14)
+  plt.title('Overall Predictive Percent: Regression', fontsize=14)
   plt.scatter(np.arange(len(scores)), scores, c='orange')
   plt.show()
   plot_confmat(confmat)
