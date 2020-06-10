@@ -64,9 +64,8 @@ def regression(trainData, testData):
     if y_test[i]==pred[i]:
       correct+=1
     confmat[int(pred[i])][int(y_test[i])]+=1
-    #TODO calculate accuracy and precision
 
-  print(f'Percent correctly predicted by logistic regression model: {round(correct/len(y_test), 2)}%')
+  # print(f'Percent correctly predicted by logistic regression model: {round(correct/len(y_test), 2)}%')
   # print('Coefficients: \n', lm.coef_)
   # print(f'Mean squared error: {round(mean_squared_error(y_test, pred), 2)}')
   # # The coefficient of determination: 1 is perfect prediction
@@ -101,13 +100,20 @@ def main():
     trainData,testData=prep_data(toms_data, split)
     scores[i],confmat=regression(trainData, testData)
   print(scores)
-
+  TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
+  accuracy =(TP+TN)/(TP+FP+FN+TN)
+  precision=TP/(TP+FP)
+  recall   =TP/(TP+FN)  
+  print(f'accuracy  = {accuracy} ')
+  print(f'precision = {precision}')
+  print(f'recall    = {recall}   ')
+  plot_confmat(confmat)
+  img = plt.imread("airlines.jpg")
   plt.xlabel('Trial')
   plt.ylabel('Percent of Correct Predictions', fontsize=14)
   plt.title('Overall Predictive Percent: Regression', fontsize=14)
   plt.scatter(np.arange(len(scores)), scores, c='orange')
   plt.show()
-  plot_confmat(confmat)
   
   timestamp(timeStart)
 

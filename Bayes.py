@@ -83,6 +83,7 @@ def main():
   cm=confmats[0]
   print(cm)
 
+  plot_confmat(cm)
   print(scores)
 
   plt.xlabel('Trial')
@@ -97,7 +98,6 @@ def main():
   print(f'accuracy  = {accuracy} ')
   print(f'precision = {precision}')
   print(f'recall    = {recall}   ')
-  plot_confmat(cm)
   timestamp(timeStart)
 
 main()
