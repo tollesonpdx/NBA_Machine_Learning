@@ -10,25 +10,21 @@ from sklearn.linear_model import LinearRegression
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-# no_nans=[
-#     'draft_pick', 'hght_noshoes','hght_wtshoes','wingspan','standing_reach',
-#     'weight', 'body_fat', 'clg_games_plyd', 'pts_ppg', 'rpg,ast', 'fg2_pct', 
-#     'fg3_pct', 'ft_pct', 'guards', 'forwards', 'centers', 'drafted', 'nba_gms_plyed']
-
 def timestamp(start):
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - start), 60)
     print(f'Program runtime: {int(minutes)} min {(seconds)} sec.')
 
-
 def prep_data(source, split):
 
-  print(source.isna().any())
-  exit()
-  print(source['nba_gms_plyed'].head())
-  # denomanoms = source.abs().max()
-  # source = source/denomanoms
-  # print(source)
+  lenTraining=int(len(source) * split)  
+  print(source)
+  denomanoms = source.abs().max()
+  denomanoms[-1], denomanoms[-2]=1., 1.
+  source/=denomanoms
+  source.loc[source['nba_gms_plyed']>=240, 'success']=1
+  source.loc[source['nba_gms_plyed'] <240, 'success']=0
+  source=shuffle(source.drop(columns=['nba_gms_plyed']))  
   trainingData = source[:lenTraining]
   testingData = source[lenTraining:]
   return trainingData, testingData
@@ -36,8 +32,8 @@ def prep_data(source, split):
 def main():
   timeStart = time.time()
   split=.8
-  toms_data=pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
-  trainData, testData = prep_data(toms_data, .8)
+  toms_data = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
+  trainData, testData = prep_data(toms_data, split)
   timestamp(timeStart)
 
 main()
