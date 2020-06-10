@@ -34,6 +34,7 @@ def plot_confmat(cm):
 
 def prep_data(source, split):
 
+  source=source.iloc[:,:-1]
   lenTraining=int(len(source) * split)  
   denomanoms = source.abs().max()
   denomanoms[-1], denomanoms[-2]=1., 1.
