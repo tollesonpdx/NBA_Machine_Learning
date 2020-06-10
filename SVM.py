@@ -63,8 +63,8 @@ def prepAndSplitData(source, split, ng):
     source.set_index(['player'], inplace=True)
     source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
     source = source.drop(columns=['name','college','nba_gms_plyed'])
-    # source = source.fillna(source.mean()) # seems like this may not work
-    source.apply(lambda x: x.fillna(x.mean()), axis=0)
+    source = source.fillna(source.mean()) # seems like this may not work
+    # source.apply(lambda x: x.fillna(x.mean()), axis=0)
     source = source.fillna(1)
 
     denomanoms = source.abs().max()
@@ -79,7 +79,7 @@ def prepAndSplitData(source, split, ng):
     testingTargets = testingData['success']
     testingData.drop(columns=['success'])
 
-    if (1):
+    if (v):
         print(f'max values for source table: {denomanoms.shape}')
         print(f'training data and targets: {trainingData.shape, trainingTargets.shape}')
         print(f' testing data and targets: {testingData.shape, testingTargets.shape}')
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     ### hyperparameters ###
     v = 0 # flag for verbose printing
-    ng = 240 # number of games played needed to be a "successful" player
+    ng = 175*0.8 # number of games played needed to be a "successful" player
     split = 2009 # proportion of training data to whole
     
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
 
     # SVM goes here
-    if 0:
+    if 1:
         print(__doc__)
 
         range = 2
