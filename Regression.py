@@ -43,7 +43,9 @@ def prep_data(source, split):
   source/=denomanoms
   source.loc[source['nba_gms_plyed']>=200, 'success']=1
   source.loc[source['nba_gms_plyed'] <200, 'success']=0
-  source=shuffle(source.drop(columns=['nba_gms_plyed']))  
+  source=shuffle(source.drop(columns=['nba_gms_plyed'])) 
+  if 0:
+    source=source.drop(columns=['draft_pick', 'drafted']) 
   trainingData=source[:lenTraining]
   testingData =source[lenTraining:]
 
@@ -110,16 +112,16 @@ def main():
   print(f'precision = {precision}')
   print(f'recall    = {recall}   ')
   img =plt.imread("court.jpg")
-  plt.xlabel('Trial', fontsize=20)
-  plt.ylabel('Percent of Correct Predictions', fontsize=20)
-  plt.title('Overall Predictive Percent: Regression', fontsize=20)
+  plt.xlabel('Trial', fontsize=16)
+  plt.ylabel('Percent of Correct Predictions', fontsize=16)
+  plt.title('Overall Predictive Percent: Regression', fontsize=16)
   plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
   avg=sum(scores*100)/len(scores)
   avgs=[avg for i in range(len(scores))]
   red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
   black_patch = mpatches.Patch(color='black', label='Individual Trial')
   plt.legend(handles=[red_patch, black_patch])
-  plt.scatter(np.arange(len(scores)), avgs, s=3, c='red', zorder=1)
+  plt.scatter(np.arange(len(scores)), avgs, s=4, c='red', zorder=1)
   plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
   plt.show()
   plot_confmat(confmat)
