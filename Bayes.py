@@ -7,7 +7,26 @@ import numpy as np
 import seaborn as sn
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from sklearn.utils import shuffle
+
+def imscatter(x, y, image, ax=None, zoom=1):
+    if ax is None:
+        ax = plt.gca()
+    try:
+        image = plt.imread(image)
+    except TypeError:
+        # Likely already an array...
+        pass
+    im = OffsetImage(image, zoom=zoom)
+    x, y = np.atleast_1d(x, y)
+    artists = []
+    for x0, y0 in zip(x, y):
+        ab = AnnotationBbox(im, (x0, y0), xycoords='data', frameon=False)
+        artists.append(ax.add_artist(ab))
+    ax.update_datalim(np.column_stack([x, y]))
+    ax.autoscale()
+    return artists
 
 def pdf(x,μ,𝜎):
 
@@ -90,13 +109,27 @@ def main():
   plt.title('Overall Predictive Percent: Bayes', fontsize=20)
   img =plt.imread("court.jpg")
   plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
+  
+  image_path = 'basketballjones.png'
+  plt.xlabel('Trial', fontsize=16)
+  plt.ylabel('Percent of Correct Predictions', fontsize=16)
+  plt.title('Overall Predictive Percent: Bayes', fontsize=16)
+  plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
   avg=sum(scores*100)/len(scores)
   avgs=[avg for i in range(len(scores))]
-  red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
-  black_patch = mpatches.Patch(color='black', label='Individual Trial')
-  plt.legend(handles=[red_patch, black_patch])  
-  plt.scatter(np.arange(len(scores)), avgs, s=3, c='red', zorder=1)
-  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
+  red_patch = mpatches.Patch(color='black', label='Avg: {:6.2f}%'.format(avg))
+  # black_patch = mpatches.Patch(color='black', label='Individual Trial')
+  plt.legend(handles=[red_patch], prop={'size': 16})
+  plt.scatter(np.arange(len(scores)), avgs, s=6, c='black', zorder=1)
+  imscatter(np.arange(len(scores)), scores*100, image_path, zoom = 0.025)#, #zorder=1)
+  
+  # avg=sum(scores*100)/len(scores)
+  # avgs=[avg for i in range(len(scores))]
+  # red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
+  # black_patch = mpatches.Patch(color='black', label='Individual Trial')
+  # plt.legend(handles=[red_patch, black_patch])  
+  # plt.scatter(np.arange(len(scores)), avgs, s=3, c='red', zorder=1)
+  # plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
   plt.show()
   plot_confmat(cm)
 
