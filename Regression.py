@@ -100,33 +100,40 @@ def main():
   toms_data = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
   scores=np.zeros(100)
   
+  accs, precs, recs=[],[],[]
   for i in range(100):
     trainData,testData=prep_data(toms_data, split)
     scores[i],confmat=regression(trainData, testData)
   # print(scores)
-  TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
-  accuracy =(TP+TN)/(TP+FP+FN+TN)
-  precision=TP/(TP+FP)
-  recall   =TP/(TP+FN)  
-  print(f'accuracy  = {accuracy} ')
-  print(f'precision = {precision}')
-  print(f'recall    = {recall}   ')
-  
-  img =plt.imread("court.jpg")
-  plt.xlabel('Trial', fontsize=16)
-  plt.ylabel('Percent of Correct Predictions', fontsize=16)
-  plt.title('Overall Predictive Percent: Regression', fontsize=16)
-  plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
-  avg=sum(scores*100)/len(scores)
-  avgs=[avg for i in range(len(scores))]
-  red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
-  black_patch = mpatches.Patch(color='black', label='Individual Trial')
-  plt.legend(handles=[red_patch, black_patch])
-  plt.scatter(np.arange(len(scores)), avgs, s=4, c='red', zorder=1)
-  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
-  plt.show()
-  plot_confmat(confmat)
+    TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
+    accuracy =(TP+TN)/(TP+FP+FN+TN)
+    precision=TP/(TP+FP)
+    recall   =TP/(TP+FN)  
+    # print(f'accuracy  = {accuracy} ')
+    # print(f'precision = {precision}')
+    # print(f'recall    = {recall}   ')
+    accs.append(accuracy)
+    precs.append(precision)
+    recs.append(recall)
+  # print(f'avg accuracy  = {sum(accs)/len(accs)} ')
+  # print(f'avg precision = {sum(precs)/len(precs)}')
+  # print(f'avg recall    = {sum(recs)/len(recs)}   ')
+  # img =plt.imread("court.jpg")
+  # plt.xlabel('Trial', fontsize=16)
+  # plt.ylabel('Percent of Correct Predictions', fontsize=16)
+  # plt.title('Overall Predictive Percent: Regression', fontsize=16)
+  # plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
+  # avg=sum(scores*100)/len(scores)
+  # avgs=[avg for i in range(len(scores))]
+  # red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
+  # black_patch = mpatches.Patch(color='black', label='Individual Trial')
+  # plt.legend(handles=[red_patch, black_patch])
+  # plt.scatter(np.arange(len(scores)), avgs, s=4, c='red', zorder=1)
+  # plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
+  # plt.show()
+  # # plot_confmat(confmat)
 
   timestamp(timeStart)
 
 main()
+
