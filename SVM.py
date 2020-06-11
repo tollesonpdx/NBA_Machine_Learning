@@ -5,9 +5,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score
 from sklearn.utils import shuffle
+import seaborn as sn
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -63,12 +65,12 @@ def prepAndSplitData(source, split, ng):
     # this is for the NCAA data
     # source = shuffle(source.drop(columns=['name','college','height','birth_date','position','url'])) 
     
-    # this is for Tom's combined data and/or the fixed-NaNs data
+    # this is for the fixed-NaNs data
     source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
-    if True:
+    if 'player' not in list(source.columns.values):
         source = source.drop(columns=['nba_gms_plyed'])
         # the player, name, and college fields were dropped before loading
-    else:
+    else: # this is for Tom's combined data
         # source.set_index(['player'], inplace=True)
         source = source.drop(columns=['player', 'name','college','nba_gms_plyed'])
         source = source.fillna(source.mean()) # seems like this may not work
@@ -81,11 +83,11 @@ def prepAndSplitData(source, split, ng):
     if split > 1: # use this if we are splitting based on year
         trainingData = source[source['draft_yr'] <= split/maxYear]
         trainingTargets = trainingData['success']
-        trainingData.drop(columns=['success','draft_yr'])
+        trainingData = trainingData.drop(columns=['success','draft_yr'])
         
         testingData = source[source['draft_yr'] > split/maxYear]
         testingTargets = testingData['success']
-        testingData.drop(columns=['success','draft_yr'])
+        testingData = testingData.drop(columns=['success','draft_yr'])
 
     else: # use this for a % split between training and testing populations
         lenTraining = int(len(source) * split)
@@ -98,8 +100,8 @@ def prepAndSplitData(source, split, ng):
         testingTargets = testingData['success']
         testingData = testingData.drop(columns=['success','draft_yr'])
 
-    trainingData = trainingData.values
-    trainingTargets = trainingTargets.values
+    # trainingData = trainingData.values
+    # trainingTargets = trainingTargets.values
     testingData = testingData.values
     testingTargets = testingTargets.values
 
@@ -111,8 +113,9 @@ def prepAndSplitData(source, split, ng):
     return trainingData, trainingTargets, testingData, testingTargets
 
 def plotSVM():
+    """ this requires extensive retooling, which isn't happening right now"""
     # # plot the decision function for each datapoint on the grid
-    range = 2
+    # range = 2
     # xx, yy = np.meshgrid(np.linspace(-range, range, 500),
                         # np.linspace(-range, range, 500))
 
@@ -131,6 +134,24 @@ def plotSVM():
     # plt.axis([-range, range, -range, range])
     # plt.show()
 
+def plotFeatureImportance(clf, x_train):
+    plot_colors=['slategray', 'gold', 'navy', 'black', 'crimson', 'chocolate', 'y', 'mediumspringgreen', 'rebeccapurple', 'coral', 'olive', 'papayawhip', 'lightseagreen', 'brown', 'orange', 'khaki', 'pink', 'purple', 'bisque','red', 'tomato', 'turquoise', 'forestgreen', 'blue', 'cyan']
+    feature_importance=abs(clf.coef_[0])
+    feature_importance=100.0*(feature_importance/feature_importance.max())
+    sorted_idx = np.argsort(feature_importance)
+    pos=np.arange(sorted_idx.shape[0]) + .5
+
+    featfig=plt.figure()
+    featax=featfig.add_subplot(1, 1, 1)
+    featax.barh(pos, feature_importance[sorted_idx], align='center', color=plot_colors, edgecolor='black')
+    featax.set_yticks(pos)
+    featax.set_yticklabels(np.array(x_train.columns)[sorted_idx], fontsize=12)
+    featax.set_xlabel('Relative Feature Importance For NBA Success', fontsize=14)
+
+    plt.tight_layout()   
+    plt.savefig(os.path.join(__location__,'results/{}_feature_importance.png'.format(str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime())))))
+    # plt.show()
+
 def printConfusionMatrix(matrixIn):
     """prints the confusion matrix to standard output"""
     count = 0
@@ -145,11 +166,36 @@ def printConfusionMatrix(matrixIn):
         print()
         count += 1
 
-def SVM(x_train, y_train, x_test, y_test):
+def plot_confmat(cm):
+    df_cm = pd.DataFrame(cm, range(2), range(2))
+    # plt.figure(figsize=(10,7))
+    sn.set(font_scale=1.4) # for label size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
+    plt.title(f'Baller or No Baller?: | test set confusion matrix')
+    plt.xlabel('Actual')
+    plt.ylabel('Predicted')
+    plt.savefig(os.path.join(__location__,'results/{}_confusion_matrix.png'.format((str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime()))))))
+    # plt.show()
+
+def printStats(matrixIn):
+    """uses the confusion matrix to calculate summary performance stats and send to standard output"""
+    correct = matrixIn[0][0] + matrixIn[1][1]
+    total = matrixIn[0][0] + matrixIn[1][1] + matrixIn[0][1] + matrixIn[1][0]
+    accuracy = round(correct/total * 100, 2)
+    precision = round(correct / (correct + matrixIn[1][0]) * 100, 2)
+    recall = round(correct / (correct + matrixIn[0][1]) * 100, 2)
+    # print(f"Correct:{correct} Total:{total} Accuracy:{accuracy}% Precision:{precision}% Recall:{recall}%")
+    print(f"\nCorrect:   {correct}\nTotal:     {total}\n\nAccuracy:  {accuracy}%\nPrecision: {precision}%\nRecall:    {recall}%\n")
+
+def SVM(x_train, y_train, x_test, y_test, rnd):
 
     lenTest = len(y_test)
-    clf = svm.NuSVC(nu=.6, gamma='auto')
-    # clf = svm.SVC(kernel='rbf', gamma='auto')
+    # clf = svm.NuSVC(nu=.6, gamma='auto')
+    # clf = svm.SVC(kernel='rbf', C=100, gamma='auto')
+    clf = svm.SVC(kernel='linear', C=100, gamma='auto')
+    # clf = svm.SVC(kernel='sigmoid', C=100, gamma='auto')
+    # clf = svm.SVC(kernel='poly', degree=3, C=100, gamma='auto')
+    # clf = svm.SVC()
     clf.fit(x_train, y_train)
     pred = clf.predict(x_test)
 
@@ -159,7 +205,13 @@ def SVM(x_train, y_train, x_test, y_test):
 
     accuracy = round(accuracy_score(y_test, pred) * 100, 2)
 
-    return accuracy, confusion
+    if rnd == 1:
+        plotFeatureImportance(clf, x_train)
+        plot_confmat(confusion)
+        printConfusionMatrix(confusion)
+        printStats(confusion)
+
+    return accuracy
 
 
 if __name__ == "__main__":
@@ -169,22 +221,25 @@ if __name__ == "__main__":
     v = 0 # flag for verbose printing
     ng = 175 # number of games played needed to be a "successful" player
     split = 0.8 # proportion of training data to whole
-    year = 2009 # year cutoff if using years for training vs testing
-    rounds = 10
+    year = 2012 # year cutoff if using years for training vs testing
+    rounds = 100
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs = loadData()
     
     results = []
+    avg = 0
     for i in range(1,rounds+1):
         x_train, y_train, x_test, y_test = prepAndSplitData(fixedNaNs, split, ng)
-        accuracy, confMatrix = SVM(x_train, y_train, x_test, y_test)
+        accuracy = SVM(x_train, y_train, x_test, y_test, i)
+
         # print(f'Percent correctly predicted by SVM model: {correctPct}%')
         print(f'{accuracy}%', end=' ')
         if i%10 == 0: print()
-        results.append([i, accuracy])
-        # printConfusionMatrix(confMatrix)
+        
+        results.append(accuracy)
+        avg += accuracy        
 
-    # print(results)
+    print(f'average {round(avg/rounds, 2)}%')
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
