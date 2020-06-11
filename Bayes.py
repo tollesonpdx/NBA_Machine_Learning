@@ -83,7 +83,7 @@ def main():
   #plot the first confusion matrix and calc stats
   cm=confmats[0]
   print(cm)
-  print(scores)
+  # print(scores)
 
   plt.xlabel('Trial')
   plt.ylabel('Percent of Correct Predictions', fontsize=20)

@@ -18,8 +18,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 plot_colors=['slategray', 'gold', 'navy', 'black', 'crimson', 'chocolate', 'y', 'mediumspringgreen', 'rebeccapurple', 'coral', 'olive', 'papayawhip', 'lightseagreen', 'brown', 'orange', 'khaki', 'pink', 'purple', 'bisque','red', 'tomato', 'turquoise', 'forestgreen', 'blue', 'cyan']
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-plt.rc('font', family='Helvetica')
-
 def timestamp(start):
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - start), 60)
@@ -103,7 +101,7 @@ def main():
   for i in range(100):
     trainData,testData=prep_data(toms_data, split)
     scores[i],confmat=regression(trainData, testData)
-  print(scores)
+  # print(scores)
   TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
   accuracy =(TP+TN)/(TP+FP+FN+TN)
   precision=TP/(TP+FP)
