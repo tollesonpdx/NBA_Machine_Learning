@@ -11,7 +11,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.utils import shuffle
 import seaborn as sn
 
-
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 def loadData():
@@ -72,6 +71,8 @@ def prepAndSplitData(source, split, ng):
 
     # source = source.iloc[:,:-1] 
     source = source.drop(source.columns[-1], axis=1) # removed unneeded columsn on far right
+    # source = source.drop(columns=['drafted','draft_pick']) # try dropping this
+    # source = source.drop(columns=['wingspan']) # try dropping this
     source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
 
     if 'player' not in list(source.columns.values):
@@ -83,7 +84,6 @@ def prepAndSplitData(source, split, ng):
         source = source.drop(columns=['player','name','college','nba_gms_plyed'])
         source = source.fillna(source.mean()) # seems like this may not work
         source = source.fillna(1)
-        print(source)
 
     denomanoms = source.abs().max()
     maxYear = denomanoms['draft_yr']
@@ -252,8 +252,6 @@ if __name__ == "__main__":
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs = loadData()
 
-    trainData, trainTarg, testData, testTarg = prepAndSplitData(fixedNaNs, split, ng)
-    
     results = []
     avg = 0
     for i in range(1,rounds+1):
