@@ -18,8 +18,12 @@ def loadData():
     playerData = pd.read_csv(os.path.join(__location__,'./SourceData/player_data.csv'))
     players = pd.read_csv(os.path.join(__location__,'./SourceData/Players.csv'))
     seasonsStats = pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats.csv'), index_col=0)
-    glossary = dict(pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats_Glossary.txt'),
-                           sep='|', names=['abbv','description'], skip_blank_lines=True).values)
+
+    glossary = dict(
+      pd.read_csv(
+        os.path.join(__location__,'./SourceData/Seasons_Stats_Glossary.txt'),
+        sep='|', names=['abbv','description'], skip_blank_lines=True).values)
+
     nbaNCAABplayers = pd.read_csv(os.path.join(__location__,'./SourceData/nba_ncaab_players.csv'))
     tomsStuff = pd.read_csv(os.path.join(__location__,'./SourceData/toms_combined_data.csv'))
     fixedNaNs = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
@@ -225,6 +229,8 @@ if __name__ == "__main__":
     rounds = 100
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs = loadData()
+
+    trainData, trainTarg, testData, testTarg = prepAndSplitData(tomsStuff, split, ng)
     
     results = []
     avg = 0
