@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import time
@@ -5,6 +6,8 @@ import pandas as pd
 import numpy as np
 import seaborn as sn
 import matplotlib.pyplot as plt
+from fontTools.ttLib import TTFont
+import matplotlib.font_manager as mfm
 from sklearn.utils import shuffle
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
@@ -15,6 +18,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 plot_colors=['slategray', 'gold', 'navy', 'black', 'crimson', 'chocolate', 'y', 'mediumspringgreen', 'rebeccapurple', 'coral', 'olive', 'papayawhip', 'lightseagreen', 'brown', 'orange', 'khaki', 'pink', 'purple', 'bisque','red', 'tomato', 'turquoise', 'forestgreen', 'blue', 'cyan']
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+plt.rc('font', family='Helvetica')
 
 def timestamp(start):
     timeEnd = time.time()
@@ -107,14 +112,15 @@ def main():
   print(f'accuracy  = {accuracy} ')
   print(f'precision = {precision}')
   print(f'recall    = {recall}   ')
-  plot_confmat(confmat)
-  img = plt.imread("airlines.jpg")
+  img =plt.imread("court.jpg")
   plt.xlabel('Trial')
   plt.ylabel('Percent of Correct Predictions', fontsize=14)
   plt.title('Overall Predictive Percent: Regression', fontsize=14)
-  plt.scatter(np.arange(len(scores)), scores, c='orange')
+  plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
+  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1, )
   plt.show()
-  
+  plot_confmat(confmat)
+
   timestamp(timeStart)
 
 main()

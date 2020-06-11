@@ -82,15 +82,17 @@ def main():
   #plot the first confusion matrix and calc stats
   cm=confmats[0]
   print(cm)
-
-  plot_confmat(cm)
   print(scores)
 
   plt.xlabel('Trial')
   plt.ylabel('Percent of Correct Predictions', fontsize=14)
   plt.title('Overall Predictive Percent: Bayes', fontsize=14)
-  plt.scatter(np.arange(len(scores)), scores, c='orange')
+  img =plt.imread("court.jpg")
+  plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
+  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1, )
   plt.show()
+  plot_confmat(cm)
+
   TP,FP,FN,TN=cm[0][0],cm[0][1],cm[1][0],cm[1][1]
   accuracy =(TP+TN)/(TP+FP+FN+TN)
   precision=TP/(TP+FP)
