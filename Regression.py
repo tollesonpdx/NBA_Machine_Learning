@@ -109,6 +109,7 @@ def main():
   print(f'accuracy  = {accuracy} ')
   print(f'precision = {precision}')
   print(f'recall    = {recall}   ')
+  
   img =plt.imread("court.jpg")
   plt.xlabel('Trial', fontsize=20)
   plt.ylabel('Percent of Correct Predictions', fontsize=20)
