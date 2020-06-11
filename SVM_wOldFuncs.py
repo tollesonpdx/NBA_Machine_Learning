@@ -15,9 +15,54 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 
 def loadData():
     """load the source data"""
+    playerData = pd.read_csv(os.path.join(__location__,'./SourceData/player_data.csv'))
+    players = pd.read_csv(os.path.join(__location__,'./SourceData/Players.csv'))
+    seasonsStats = pd.read_csv(os.path.join(__location__,'./SourceData/Seasons_Stats.csv'), index_col=0)
+
+    glossary = dict(
+      pd.read_csv(
+        os.path.join(__location__,'./SourceData/Seasons_Stats_Glossary.txt'),
+        sep='|', names=['abbv','description'], skip_blank_lines=True).values)
+
+    nbaNCAABplayers = pd.read_csv(os.path.join(__location__,'./SourceData/nba_ncaab_players.csv'))
     tomsStuff = pd.read_csv(os.path.join(__location__,'./SourceData/toms_combined_data.csv'))
     fixedNaNs = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
-    return tomsStuff, fixedNaNs
+
+    if (v):
+        print(f"playerData shape:{playerData.shape}")
+        print(f"players shape:{players.shape}")
+        print(f"seasonsStats shape:{seasonsStats.shape}")
+        print(f'tom\'s stuff shape:{tomsStuff.shape}')
+        print(f'fixed NaNs shape:{fixedNaNs.shape}')
+    if (v):
+        print(playerData)
+        print(players)
+        print(seasonsStats)
+        print(glossary)
+        print(tomsStuff)
+        print(fixedNaNs)
+
+    return playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs
+
+def idSuccessOld(seasonsStats, ng):
+    playerGames={}
+    success_players=[]
+    if (v): print(seasonsStats['G'].head())
+    for player in seasonsStats['Player']:
+      if player not in playerGames.keys():
+        playerGames[player]=0
+        games=[seasonsStats.loc[seasonsStats['Player']==player, 'G']][0].values
+        playerGames[player]=sum(games)
+        if playerGames[player] >= ng:
+          if (v): print(player, playerGames[player])
+          success_players.append(player)
+
+def idSuccessNew(seasonsStats, ng):
+    successP = seasonsStats.groupby(['Player'])['G'].sum()
+    successP.columns = ['Player', 'G']
+    successP = successP >= ng
+    if (v): print(successP)
+    return successP
 
 def prepAndSplitData(source, split, ng):
     
@@ -76,6 +121,28 @@ def prepAndSplitData(source, split, ng):
 
     return trainingData, trainingTargets, testingData, testingTargets
 
+def plotSVM():
+    """ this requires extensive retooling, which isn't happening right now"""
+    # # plot the decision function for each datapoint on the grid
+    # range = 2
+    # xx, yy = np.meshgrid(np.linspace(-range, range, 500),
+                        # np.linspace(-range, range, 500))
+
+    # Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    # Z = Z.reshape(xx.shape)
+
+    # plt.imshow(Z, interpolation='nearest',
+    #         extent=(xx.min(), xx.max(), yy.min(), yy.max()), aspect='auto',
+    #         origin='lower', cmap=plt.cm.PuOr_r)
+    # contours = plt.contour(xx, yy, Z, levels=[0], linewidths=2,
+    #                     linestyles='dashed')
+    # plt.scatter(X[:, 0], X[:, 1], s=30, c=Y, cmap=plt.cm.Paired,
+    #             edgecolors='k')
+    # plt.xticks(())
+    # plt.yticks(())
+    # plt.axis([-range, range, -range, range])
+    # plt.show()
+
 def plotFeatureImportance(clf, x_train):
     plot_colors=['slategray', 'gold', 'navy', 'black', 'crimson', 'chocolate', 'y', 'mediumspringgreen', 'rebeccapurple', 'coral', 'olive', 'papayawhip', 'lightseagreen', 'brown', 'orange', 'khaki', 'pink', 'purple', 'bisque','red', 'tomato', 'turquoise', 'forestgreen', 'blue', 'cyan']
     feature_importance=abs(clf.coef_[0])
@@ -91,32 +158,32 @@ def plotFeatureImportance(clf, x_train):
     featax.set_xlabel('Relative Feature Importance For NBA Success', fontsize=14)
 
     plt.tight_layout()   
-    plt.savefig(os.path.join(__location__,'results/{}_feature_importance.png'.format(str(time.strftime("%Y%m%d_%H_%M_%S", time.localtime())))))
+    plt.savefig(os.path.join(__location__,'results/{}_feature_importance.png'.format(str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime())))))
     # plt.show()
 
 def printConfusionMatrix(matrixIn):
     """prints the confusion matrix to standard output"""
+    count = 0
     print(f"\nConfusion Matrix:\n    ",end='')
     for i in range(len(matrixIn)):
         print(str(i).rjust(7,' '),end='')
     print()
-    rowNum = 0
     for row in matrixIn:
-        print(rowNum,end='   ')
+        print(count,end='   ')
         for item in row:
-            print(str(round(item,2)).rjust(7,' '),end='')
+            print(str(item).rjust(7,' '),end='')
         print()
-        rowNum += 1
+        count += 1
 
 def plot_confmat(cm):
     df_cm = pd.DataFrame(cm, range(2), range(2))
-    plt.figure(figsize=(10,7))
+    # plt.figure(figsize=(10,7))
     sn.set(font_scale=1.4) # for label size
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
     plt.title(f'Baller or No Baller?: | test set confusion matrix')
     plt.xlabel('Actual')
     plt.ylabel('Predicted')
-    plt.savefig(os.path.join(__location__,'results/{}_confusion_matrix.png'.format((str(time.strftime("%Y%m%d_%H_%M_%S", time.localtime()))))))
+    plt.savefig(os.path.join(__location__,'results/{}_confusion_matrix.png'.format((str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime()))))))
     # plt.show()
 
 def printStats(matrixIn):
@@ -126,6 +193,7 @@ def printStats(matrixIn):
     accuracy = round(correct/total * 100, 2)
     precision = round(correct / (correct + matrixIn[1][0]) * 100, 2)
     recall = round(correct / (correct + matrixIn[0][1]) * 100, 2)
+    # print(f"Correct:{correct} Total:{total} Accuracy:{accuracy}% Precision:{precision}% Recall:{recall}%")
     print(f"\nCorrect:   {correct}\nTotal:     {total}\n\nAccuracy:  {accuracy}%\nPrecision: {precision}%\nRecall:    {recall}%\n")
 
 def plotResults(scores, avg):
@@ -142,23 +210,21 @@ def plotResults(scores, avg):
     plt.scatter(np.arange(len(scores)), avgs, s=5, c='red', zorder=1, label='Avg: {:6.2f}%'.format(avg))
     plt.scatter(np.arange(len(scores)), scores, c='black', zorder=1, label='Individual Trial')
     plt.legend()
-    plt.savefig(os.path.join(__location__,'results/{}_results_plot.png'.format((str(time.strftime("%Y%m%d_%H_%M_%S", time.localtime()))))))
+    plt.savefig(os.path.join(__location__,'results/{}_results_plot.png'.format((str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime()))))))
     # plt.show()
 
 def SVM(x_train, y_train, x_test, y_test, rnd):
 
     lenTest = len(y_test)
-    
     # clf = svm.NuSVC(nu=.6, gamma='auto')
     # clf = svm.SVC(kernel='rbf', C=100, gamma='auto')
-    # clf = svm.SVC(kernel='linear', C=100, gamma='auto')
-    clf = svm.SVC(kernel='sigmoid', C=1, gamma='auto')
+    clf = svm.SVC(kernel='linear', C=100, gamma='auto')
+    # clf = svm.SVC(kernel='sigmoid', C=100, gamma='auto')
     # clf = svm.SVC(kernel='poly', degree=3, C=100, gamma='auto')
     # clf = svm.SVC()
-    
     clf.fit(x_train, y_train)
     pred = clf.predict(x_test)
-    
+
     confusion=np.zeros((2,2))
     for i in range(lenTest):
         confusion[int(pred[i])][int(y_test[i])]+=1
@@ -170,6 +236,7 @@ def SVM(x_train, y_train, x_test, y_test, rnd):
 
     return accuracy, confusion
 
+
 if __name__ == "__main__":
     timeStart = time.time()
 
@@ -180,7 +247,7 @@ if __name__ == "__main__":
     year = 2009 # year cutoff if using years for training vs testing
     rounds = 100
 
-    tomsStuff, fixedNaNs = loadData()
+    playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs = loadData()
 
     results = []
     confAll = np.zeros((2,2))
@@ -190,7 +257,7 @@ if __name__ == "__main__":
         accuracy, confTemp = SVM(x_train, y_train, x_test, y_test, i)
 
         if (v):
-            # print(f'Percent correctly predicted by SVM model: {accuracy}%')
+            # print(f'Percent correctly predicted by SVM model: {correctPct}%')
             print(f'{accuracy}%', end=' ')
             if i%10 == 0: print()
         
@@ -199,12 +266,8 @@ if __name__ == "__main__":
 
     confAll /= rounds
 
-    timeEnd = time.time()
-    minutes, seconds = divmod((timeEnd - timeStart), 60)
-    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run BEFORE reporting.')
-
     if (1):
-        print(f'\nAverage Performance Over {rounds} Rounds:')
+        print(f'confusion matrix of average performance over {rounds} rounds:')
         printConfusionMatrix(confAll)
         printStats(confAll)
         plot_confmat(confAll)
@@ -212,4 +275,4 @@ if __name__ == "__main__":
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
-    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run INCLUDING reporting.')
+    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run.')
