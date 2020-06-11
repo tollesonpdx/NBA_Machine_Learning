@@ -152,8 +152,8 @@ def SVM(x_train, y_train, x_test, y_test, rnd):
     # clf = svm.NuSVC(nu=.6, gamma='auto')
     # clf = svm.SVC(kernel='rbf', C=100, gamma='auto')
     # clf = svm.SVC(kernel='linear', C=100, gamma='auto')
-    clf = svm.SVC(kernel='sigmoid', C=1, gamma='auto')
-    # clf = svm.SVC(kernel='poly', degree=3, C=100, gamma='auto')
+    # clf = svm.SVC(kernel='sigmoid', C=100, gamma='auto')
+    clf = svm.SVC(kernel='poly', degree=3, C=1, gamma='auto')
     # clf = svm.SVC()
     
     clf.fit(x_train, y_train)
