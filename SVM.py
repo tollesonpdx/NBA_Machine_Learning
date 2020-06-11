@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score
@@ -68,17 +69,21 @@ def prepAndSplitData(source, split, ng):
     
     # this is for the NCAA data
     # source = shuffle(source.drop(columns=['name','college','height','birth_date','position','url'])) 
-    
-    # this is for the fixed-NaNs data
+
+    # source = source.iloc[:,:-1] 
+    source = source.drop(source.columns[-1], axis=1) # removed unneeded columsn on far right
     source['success'] = [1 if x>=ng else 0 for x in source['nba_gms_plyed']]
+
     if 'player' not in list(source.columns.values):
-        source = source.drop(columns=['nba_gms_plyed'])
+        # this is for the fixed-NaNs data
         # the player, name, and college fields were dropped before loading
+        source = source.drop(columns=['nba_gms_plyed'])
     else: # this is for Tom's combined data
         # source.set_index(['player'], inplace=True)
-        source = source.drop(columns=['player', 'name','college','nba_gms_plyed'])
+        source = source.drop(columns=['player','name','college','nba_gms_plyed'])
         source = source.fillna(source.mean()) # seems like this may not work
         source = source.fillna(1)
+        print(source)
 
     denomanoms = source.abs().max()
     maxYear = denomanoms['draft_yr']
@@ -191,6 +196,23 @@ def printStats(matrixIn):
     # print(f"Correct:{correct} Total:{total} Accuracy:{accuracy}% Precision:{precision}% Recall:{recall}%")
     print(f"\nCorrect:   {correct}\nTotal:     {total}\n\nAccuracy:  {accuracy}%\nPrecision: {precision}%\nRecall:    {recall}%\n")
 
+def plotResults(scores, avg):
+    plt.clf()
+    img =plt.imread("court.jpg")
+    plt.xlabel('Trial', fontsize=20)
+    plt.ylabel('Percent of Correct Predictions', fontsize=20)
+    plt.title('Overall Predictive Percent: SVM', fontsize=20)
+    plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
+    avgs=[avg for i in range(len(scores))]
+    # red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
+    # black_patch = mpatches.Patch(color='black', label='Individual Trial')
+    # plt.legend(handles=[red_patch, black_patch])
+    plt.scatter(np.arange(len(scores)), avgs, s=5, c='red', zorder=1, label='Avg: {:6.2f}%'.format(avg))
+    plt.scatter(np.arange(len(scores)), scores, c='black', zorder=1, label='Individual Trial')
+    plt.legend()
+    plt.savefig(os.path.join(__location__,'results/{}_results_plot.png'.format((str(time.strftime("%Y%m%d_%H:%M:%S", time.localtime()))))))
+    # plt.show()
+
 def SVM(x_train, y_train, x_test, y_test, rnd):
 
     lenTest = len(y_test)
@@ -225,12 +247,12 @@ if __name__ == "__main__":
     v = 0 # flag for verbose printing
     ng = 175 # number of games played needed to be a "successful" player
     split = 0.8 # proportion of training data to whole
-    year = 2012 # year cutoff if using years for training vs testing
+    year = 2009 # year cutoff if using years for training vs testing
     rounds = 100
 
     playerData, players, seasonsStats, glossary, nbaNCAABplayers, tomsStuff, fixedNaNs = loadData()
 
-    trainData, trainTarg, testData, testTarg = prepAndSplitData(tomsStuff, split, ng)
+    trainData, trainTarg, testData, testTarg = prepAndSplitData(fixedNaNs, split, ng)
     
     results = []
     avg = 0
@@ -239,13 +261,17 @@ if __name__ == "__main__":
         accuracy = SVM(x_train, y_train, x_test, y_test, i)
 
         # print(f'Percent correctly predicted by SVM model: {correctPct}%')
-        print(f'{accuracy}%', end=' ')
-        if i%10 == 0: print()
+        if (v):
+            print(f'{accuracy}%', end=' ')
+            if i%10 == 0: print()
         
         results.append(accuracy)
         avg += accuracy        
-
-    print(f'average {round(avg/rounds, 2)}%')
+    
+    avg = round(avg/rounds, 2)
+    if (v): print(f'average {avg}%')
+    
+    plotResults(results, avg)
 
     timeEnd = time.time()
     minutes, seconds = divmod((timeEnd - timeStart), 60)
