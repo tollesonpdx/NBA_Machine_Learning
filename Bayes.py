@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sn
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from sklearn.utils import shuffle
 
 def pdf(x,μ,𝜎):
@@ -39,8 +40,8 @@ def prep_data(source, split):
   denomanoms = source.abs().max()
   denomanoms[-1], denomanoms[-2]=1., 1.
   source/=denomanoms
-  source.loc[source['nba_gms_plyed']>=240, 'success']=1
-  source.loc[source['nba_gms_plyed'] <240, 'success']=0
+  source.loc[source['nba_gms_plyed']>=200, 'success']=1
+  source.loc[source['nba_gms_plyed'] <200, 'success']=0
   source=shuffle(source.drop(columns=['nba_gms_plyed']))  
   trainingData=source[:lenTraining]
   testingData =source[lenTraining:]
@@ -85,11 +86,17 @@ def main():
   print(scores)
 
   plt.xlabel('Trial')
-  plt.ylabel('Percent of Correct Predictions', fontsize=14)
-  plt.title('Overall Predictive Percent: Bayes', fontsize=14)
+  plt.ylabel('Percent of Correct Predictions', fontsize=20)
+  plt.title('Overall Predictive Percent: Bayes', fontsize=20)
   img =plt.imread("court.jpg")
   plt.imshow(img, zorder=0, extent=[-5,100, 30,100])
-  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1, )
+  avg=sum(scores*100)/len(scores)
+  avgs=[avg for i in range(len(scores))]
+  red_patch = mpatches.Patch(color='red', label='Avg: {:6.2f}%'.format(avg))
+  black_patch = mpatches.Patch(color='black', label='Individual Trial')
+  plt.legend(handles=[red_patch, black_patch])  
+  plt.scatter(np.arange(len(scores)), avgs, s=3, c='red', zorder=1)
+  plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
   plt.show()
   plot_confmat(cm)
 
