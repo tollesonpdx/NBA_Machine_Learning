@@ -141,7 +141,7 @@ def main():
   red_patch = mpatches.Patch(color='black', label='Avg: {:6.2f}%'.format(avg))
   black_patch = mpatches.Patch(color='black', label='Individual Trial')
   # plt.legend(handles=[red_patch, black_patch])
-  plt.legend(handles=[red_patch ])
+  plt.legend(handles=[red_patch], prop={'size': 16})
   plt.scatter(np.arange(len(scores)), avgs, s=6, c='black', zorder=1)
   #plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
   imscatter(np.arange(len(scores)), scores*100, image_path, zoom = 0.025)#, #zorder=1)
