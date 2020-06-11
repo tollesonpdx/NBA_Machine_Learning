@@ -58,19 +58,12 @@ def regression(trainData, testData, tally):
   X_test =testData.drop(columns=['draft_yr','rpg', 'ast','success']) # Drop draft pick?
   y_train=trainData['success'].values
   y_test =testData ['success'].values
-  
-  # lm = LogisticRegression(random_state = 0)
-  # lm.fit(X_train, y_train)
-  # pred=lm.predict(X_test)
 
   # Use this as my base code - https://machinelearningmastery.com/feature-selection-machine-learning-python/
 
   model = LogisticRegression(solver='lbfgs') # lbfgs-Stands for Limited-memory Broyden–Fletcher–Goldfarb–Shanno
-  #nFeatures = 5
+  
   columns = X_train.columns
-  #print(len(columns))
-  #tally = np.zeros(len(columns))
-  #print(f'tally size: {len(tally)}')
   for i in range(1,len(columns)):
     nFeatures = i
     rfe = RFE(model, nFeatures)
@@ -128,31 +121,40 @@ def regression(trainData, testData, tally):
   return correct/len(y_test), confmat, tally
 
 def displayGraph(trainData,pctTally):
-    #fig = plt.figure()
-    colors = ['brown','deepskyblue','orangered','darkblue','green','gray',\
-              'lightblue', 'rosybrown', 'orange', 'pink', 'black','red',\
-              'crimson','goldenrod', 'yellow', 'blue', 'salmon', 'aquamarine',\
-              'dimgray', 'tan', 'hotpink','purple']  # 'tomato','lawngreen', 'darkturquoise','darkorange'
+    colors=['slategray', 'gold', 'navy', 'black', 'crimson', 'chocolate', 'y', 'mediumspringgreen', 'rebeccapurple', 'coral', 'olive', 'papayawhip', 'lightseagreen', 'brown', 'orange', 'khaki', 'pink', 'purple', 'bisque','red', 'tomato', 'turquoise', 'forestgreen', 'blue', 'cyan']
+    # colors = ['brown','deepskyblue','orangered','darkblue','green','gray',\
+    #           'lightblue', 'rosybrown', 'orange', 'pink', 'black','red',\
+    #           'crimson','goldenrod', 'yellow', 'blue', 'salmon', 'aquamarine',\
+    #           'dimgray', 'tan', 'hotpink','purple']  # 'tomato','lawngreen', 'darkturquoise','darkorange'
    
     trainData = trainData.drop(columns=['draft_yr','rpg','ast','success'])
     columns = trainData.columns
     dataTuples = list(zip(columns, pctTally))
     # print(dataTuples)
     df = pd.DataFrame(dataTuples, columns=['feature', 'pct'])
-    df.sort_values(by=['pct'], inplace=True, ascending=False)
-    print(df)
+    df.sort_values(by=['pct'], inplace=True, ascending=True)
+    #print(df)
+
     # print(f'# of pctTally: {len(pctTally)}')
     # print(f'# of colors: {len(colors)}')
     # print(f'# of columns: {len(columns)}')
     # print(columns)
-    nColumns = np.arange(len(columns))
-    plt.title('Reduced Models: Feature Appearance Frequency')
-    plt.ylabel('Percentage')
-    plt.xticks(nColumns, columns, rotation=90, size=8)
+
+    nColumns = np.arange(df['feature'].shape[0])
+    #print(nColumns)
+    columns = df['feature'].tolist()
+    #print(len(columns))
+
+    plt.xlabel('Reduced Models: Feature Frequency % - 100 Trials', fontsize=12)
+    # Create horizontal bars
+    plt.barh(nColumns, df['pct'], color=colors, align='center')
+    # Create names on the y-axis
+    plt.yticks(nColumns, columns) #rotation=90, , size=8
     #plt.grid(color='#95a5a6', linestyle='--', linewidth=0.75, axis='y', alpha=0.5)
-    plt.bar(columns,pctTally,color=colors, align='center')
+    # Show graphic
     plt.tight_layout()
     plt.show()
+
 
 def main():
   timeStart = time.time()
