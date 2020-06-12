@@ -13,6 +13,11 @@ import seaborn as sn
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+def timeStamp(start):
+    timeEnd = time.time()
+    minutes, seconds = divmod((timeEnd - start), 60)
+    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run BEFORE reporting.')
+
 def loadData():
     """load the source data"""
     tomsStuff = pd.read_csv(os.path.join(__location__,'./SourceData/toms_combined_data.csv'))
@@ -87,8 +92,8 @@ def plotFeatureImportance(clf, x_train):
     featax=featfig.add_subplot(1, 1, 1)
     featax.barh(pos, feature_importance[sorted_idx], align='center', color=plot_colors, edgecolor='black')
     featax.set_yticks(pos)
-    featax.set_yticklabels(np.array(x_train.columns)[sorted_idx], fontsize=12)
-    featax.set_xlabel('Relative Feature Importance For NBA Success', fontsize=14)
+    featax.set_yticklabels(np.array(x_train.columns)[sorted_idx])
+    featax.set_xlabel('Relative Feature Importance For NBA Success')
 
     plt.tight_layout()   
     plt.savefig(os.path.join(__location__,'results/{}_feature_importance.png'.format(str(time.strftime("%Y%m%d_%H_%M_%S", time.localtime())))))
@@ -109,6 +114,7 @@ def printConfusionMatrix(matrixIn):
         rowNum += 1
 
 def plot_confmat(cm):
+    cm = cm / (cm.sum()) * 100
     df_cm = pd.DataFrame(cm, range(2), range(2))
     plt.figure(figsize=(10,7))
     sn.set(font_scale=1.4) # for label size
@@ -151,9 +157,9 @@ def SVM(x_train, y_train, x_test, y_test, rnd):
     
     # clf = svm.NuSVC(nu=.6, gamma='auto')
     # clf = svm.SVC(kernel='rbf', C=100, gamma='auto')
-    # clf = svm.SVC(kernel='linear', C=100, gamma='auto')
+    clf = svm.SVC(kernel='linear', C=100, gamma='auto')
     # clf = svm.SVC(kernel='sigmoid', C=100, gamma='auto')
-    clf = svm.SVC(kernel='poly', degree=3, C=1, gamma='auto')
+    # clf = svm.SVC(kernel='poly', degree=3, C=100, gamma='auto')
     # clf = svm.SVC()
     
     clf.fit(x_train, y_train)
@@ -199,17 +205,14 @@ if __name__ == "__main__":
 
     confAll /= rounds
 
-    timeEnd = time.time()
-    minutes, seconds = divmod((timeEnd - timeStart), 60)
-    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run BEFORE reporting.')
+    timeStamp(timeStart)
 
-    if (1):
+    # Report the Results
+    if (1): 
         print(f'\nAverage Performance Over {rounds} Rounds:')
         printConfusionMatrix(confAll)
         printStats(confAll)
         plot_confmat(confAll)
         plotResults(results, ((confAll[0][0]+confAll[1][1])/confAll.sum()*100))
 
-    timeEnd = time.time()
-    minutes, seconds = divmod((timeEnd - timeStart), 60)
-    print(f'This program took {int(minutes)} minutes and {(seconds)} seconds to run INCLUDING reporting.')
+    timeStamp(timeStart)
