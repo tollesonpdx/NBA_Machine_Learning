@@ -43,6 +43,10 @@ def prep_data(source, split):
   source.loc[source['nba_gms_plyed']>=200, 'success']=1
   source.loc[source['nba_gms_plyed'] <200, 'success']=0
   source=shuffle(source.drop(columns=['nba_gms_plyed']))  
+  if 1:
+    source=source.drop(columns=['draft_pick', 'drafted']) 
+  if 0:
+    source=source['draft_pick', 'drafted'] 
   trainingData=source[:lenTraining]
   testingData =source[lenTraining:]
 
@@ -55,8 +59,8 @@ def main():
   split=.6
   toms_data = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
   scores=np.zeros(100)
-
-  for x in range(100):
+  N=100
+  for x in range(N):
     score=0
     trainData,testData   =prep_data(toms_data, split)
     train_baller_prior   =np.sum(trainData, axis=0)[-1]/len(trainData)
@@ -65,6 +69,7 @@ def main():
     train_baller_means   ,train_baller_stdvs   =np.mean(train_baller,    axis=0)[:-1],np.std(train_baller,    axis=0)[:-1]
     train_no_baller_means,train_no_baller_stdvs=np.mean(train_no_baller, axis=0)[:-1],np.std(train_no_baller, axis=0)[:-1]  
     train_baller_stdvs[train_baller_stdvs==0.0],train_no_baller_stdvs[train_no_baller_stdvs==0.0]=.000001,.000001
+    accs, precs, recs=[],[],[]
     confmat=np.zeros((2,2))
     #loop over the test data
     for i in range(len(testData)):
@@ -78,11 +83,27 @@ def main():
       confmat[int(pred)][int(correct_class)]+=1
       if int(pred) == int(correct_class): score+=1
     confmats.append(confmat/len(testData))
+    TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
+    accuracy =(TP+TN)/(TP+FP+FN+TN)
+    precision=TP/(TP+FP)
+    recall   =TP/(TP+FN)  
+    accs.append(accuracy)
+    precs.append(precision)
+    recs.append(recall)
     scores[x]=score/len(testData)   
 
+  print(f'avg accuracy  = {sum(accs)/len(accs)} ')
+  print(f'avg precision = {sum(precs)/len(precs)}')
+  print(f'avg recall    = {sum(recs)/len(recs)}   ')
   #plot the first confusion matrix and calc stats
-  cm=confmats[0]
-  print(cm)
+  cm=np.zeros((2,2))
+  confmats=np.array(confmats)
+  print(confmats.shape)
+  for i in range(len(confmats)): 
+    for j in range(2):
+      for k in range(2):
+        cm[j][k]+=confmats[i][j][k] 
+  print((cm/N)*100)
   # print(scores)
 
   plt.xlabel('Trial', fontsize=16)
@@ -100,13 +121,13 @@ def main():
   plt.show()
   plot_confmat(cm)
 
-  TP,FP,FN,TN=cm[0][0],cm[0][1],cm[1][0],cm[1][1]
-  accuracy =(TP+TN)/(TP+FP+FN+TN)
-  precision=TP/(TP+FP)
-  recall   =TP/(TP+FN)  
-  print(f'accuracy  = {accuracy} ')
-  print(f'precision = {precision}')
-  print(f'recall    = {recall}   ')
+  # TP,FP,FN,TN=cm[0][0],cm[0][1],cm[1][0],cm[1][1]
+  # accuracy =(TP+TN)/(TP+FP+FN+TN)
+  # precision=TP/(TP+FP)
+  # recall   =TP/(TP+FN)  
+  # print(f'accuracy  = {accuracy} ')
+  # print(f'precision = {precision}')
+  # print(f'recall    = {recall}   ')
   timestamp(timeStart)
 
 main()

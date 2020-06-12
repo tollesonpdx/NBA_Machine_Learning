@@ -44,7 +44,7 @@ def prep_data(source, split):
   source.loc[source['nba_gms_plyed']>=200, 'success']=1
   source.loc[source['nba_gms_plyed'] <200, 'success']=0
   source=shuffle(source.drop(columns=['nba_gms_plyed'])) 
-  if 0:
+  if 1:
     source=source.drop(columns=['draft_pick', 'drafted']) 
   trainingData=source[:lenTraining]
   testingData =source[lenTraining:]
@@ -99,25 +99,37 @@ def main():
   split=.8
   toms_data = pd.read_csv(os.path.join(__location__,'./SourceData/fixed_nans.csv'))
   scores=np.zeros(100)
-  
+  N=100
+  confmats=[]
   accs, precs, recs=[],[],[]
-  for i in range(100):
+  for i in range(N):
     trainData,testData=prep_data(toms_data, split)
     scores[i],confmat=regression(trainData, testData)
-  # print(scores)
+    # print(scores)
     TP,FP,FN,TN=confmat[0][0],confmat[0][1],confmat[1][0],confmat[1][1]
     accuracy =(TP+TN)/(TP+FP+FN+TN)
     precision=TP/(TP+FP)
     recall   =TP/(TP+FN)  
+    confmats.append(confmat)
     # print(f'accuracy  = {accuracy} ')
     # print(f'precision = {precision}')
     # print(f'recall    = {recall}   ')
     accs.append(accuracy)
     precs.append(precision)
     recs.append(recall)
-  # print(f'avg accuracy  = {sum(accs)/len(accs)} ')
-  # print(f'avg precision = {sum(precs)/len(precs)}')
-  # print(f'avg recall    = {sum(recs)/len(recs)}   ')
+  print(f'avg accuracy  = {sum(accs)/len(accs)} ')
+  print(f'avg precision = {sum(precs)/len(precs)}')
+  print(f'avg recall    = {sum(recs)/len(recs)}   ')
+  cm=np.zeros((2,2))
+  confmats=np.array(confmats)
+  print(confmats.shape)
+  print(len(confmats))
+  for i in range(len(confmats)): 
+    for j in range(2):
+      for k in range(2):
+        cm[j][k]+=confmats[i][j][k] 
+  print((cm/N)/65)
+  cm=((cm/N)/65)*100
   # img =plt.imread("court.jpg")
   # plt.xlabel('Trial', fontsize=16)
   # plt.ylabel('Percent of Correct Predictions', fontsize=16)
@@ -131,7 +143,7 @@ def main():
   # plt.scatter(np.arange(len(scores)), avgs, s=4, c='red', zorder=1)
   # plt.scatter(np.arange(len(scores)), scores*100, c='black', zorder=1)
   # plt.show()
-  # # plot_confmat(confmat)
+  plot_confmat(cm)
 
   timestamp(timeStart)
 
